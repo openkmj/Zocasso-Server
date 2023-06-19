@@ -29,7 +29,7 @@ class SocketManagerClass {
   init(server: any) {
     this.io = new Server(server, { cors: { origin: '*' } })
     this.io.on('connection', (socket) => {
-      socket.on('JOIN_ROOM', (id) => {
+      socket.on('JOIN', (id) => {
         console.log('join room :', id)
         socket.join(id.toString())
         this.emitEvent(id, 'CHAT', {
@@ -37,15 +37,42 @@ class SocketManagerClass {
           text: '000 has joined.',
         })
       })
-      socket.on('disconnect', (id) => {
+      socket.on('LEAVE', () => {
         //
       })
-      socket.on('CHAT', ({}) => {
+      socket.on('CHAT', () => {
+        // 1. broadcast chat to other clients
+        // 2. if the word is current answer,
+        // game status updated.
+        //
+      })
+      socket.on('DRAW', () => {
+        //
+      })
+      socket.on('KICK', () => {
+        //
+      })
+      socket.on('SELECT_WORD', () => {
+        //
+      })
+      socket.on('UPDATE_SETTING', () => {
+        //
+      })
+      socket.on('START', () => {
         //
       })
     })
   }
-  emitEvent(roomId: string, type: 'CHAT' | 'MEMBER_UPDATE', params: any) {
+  emitEvent(
+    roomId: string,
+    type:
+      | 'CHAT'
+      | 'MEMBER_UPDATE'
+      | 'STAGE_UPDATED'
+      | 'CANVAS_UPDATED'
+      | 'SETTING_UPDATED',
+    params: any
+  ) {
     if (!this.io) return
     console.log(`emit ${type} event to ${roomId}`)
     console.log(params)

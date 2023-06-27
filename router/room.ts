@@ -4,7 +4,7 @@ import checkToken from '../middleware/checkToken'
 
 const room = Router()
 
-room.get('/:roomId', checkToken, joinRoom)
+room.get('/:roomId', joinRoom)
 // room.get('/', checkToken, joinRoom)
 room.post('/', createRoom)
 

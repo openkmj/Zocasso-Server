@@ -1,34 +1,22 @@
-import { Member } from '../util/const'
 import { getRandomString } from '../util/random'
+import Game from './Game'
 
 const CONNECTION_TIMEOUT = 3 * 1000
 
 interface RoomTable {
   [key: string]: Room
 }
-interface RoomConfig {
-  isPrivate: boolean
-}
-
-const ROOM_STATUS = {
-  PENDING: 0, // 로비 대기
-  SELECTING_WORD: 1, // 단어 선택 중
-  DRAWING: 2, // 그림 그리는 중
-}
-type ROOM_STATUS_TYPE = (typeof ROOM_STATUS)[keyof typeof ROOM_STATUS]
 
 class Room {
-  private id: string
+  id: string
   private memberList: Member[]
   private config: RoomConfig
-  private status: ROOM_STATUS_TYPE
-  private word: string
-  private activeUser: Member
+  private game: Game | null
   constructor(id: string, config: RoomConfig) {
     this.id = id
     this.memberList = []
     this.config = config
-    this.status = ROOM_STATUS.PENDING
+    this.game = null
   }
   join(member: Member) {
     this.memberList.push(member)
@@ -43,9 +31,9 @@ class Room {
     return this.config
   }
   start() {
-    if (this.status !== ROOM_STATUS.PENDING) return
-    this.status = ROOM_STATUS.SELECTING_WORD
-    this.activeUser = this.memberList[0]
+    if (this.game) return null
+    this.game = new Game(this.memberList, this.config.language)
+    const m = this.game.getNextDrawer()
   }
   gotoSelectingWord() {
     // select user
@@ -76,7 +64,7 @@ class RoomManager {
   joinRoom(id: string, member: Member) {
     if (!this.roomTable[id]) return null
     this.roomTable[id].join(member)
-    return this.roomTable[id]
+    return this.roomTable[id].id
   }
   getRoomInfo(id: string) {
     if (!this.roomTable[id]) return null

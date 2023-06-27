@@ -1,0 +1,66 @@
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Room</title>
+  </head>
+  <body>
+    <div>
+      <button id="create-room">create room</button>
+    </div>
+    <div>
+      <input id="input" />
+      <button id="create-room">join room</button>
+    </div>
+  </body>
+</html>
+<style>
+  * {
+    margin: 0;
+  }
+  button {
+    padding: 10px;
+  }
+</style>
+<script
+  src="https://cdn.socket.io/4.6.0/socket.io.min.js"
+  integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+"
+  crossorigin="anonymous"
+></script>
+<script>
+  const createButton = document.querySelector('#create-room')
+  createButton.onclick = async () => {
+    const response = await fetch('http://localhost:3005/room', {
+      method: 'POST',
+    })
+    const result = await response.json()
+    console.log(result.roomId)
+    setTimeout(() => {
+      initSocket(result.roomId)
+    }, 1000)
+  }
+
+  const initSocket = (id) => {
+    const socket = io('http://localhost:3005')
+    socket.on('connect', () => {
+      console.log('connected')
+      console.log(id)
+      socket.emit('JOIN', { roomId: id, member: { id: 123, name: 'minjae' } })
+      setTimeout(() => {
+        socket.emit('CHAT', {
+          type: 'USR',
+          member: { id: 123, name: 'minjae' },
+          text: 'hi',
+        })
+      }, 2000)
+      socket.on('CHATTING_UPDATED', (payload) => {
+        console.log(payload)
+      })
+      socket.on('MEMBER_UPDATED', (payload) => {
+        console.log(payload)
+      })
+    })
+    socket.connect()
+  }
+</script>

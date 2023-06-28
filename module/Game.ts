@@ -2,6 +2,8 @@ import { getRandomWord } from '../util/word'
 import SocketManager from './SocketManager'
 
 class Game {
+  static SELECTING_WORD_TIME = 15 * 1000
+
   private config: GameConfig
   private status: GameStatus
   private memberList: Member[]
@@ -10,6 +12,7 @@ class Game {
   stage = 0
   private language: AvailableLangugae
   activeUser: Member | null
+  private timer: NodeJS.Timer | null
 
   constructor(
     memberList: Member[],
@@ -25,19 +28,20 @@ class Game {
     this.status = GAME_STATUS.PENDING
     this.language = language
     this.activeUser = null
+    this.timer = null
   }
   next(type: 'DRAW', x: number): void
   next(type: 'WORD', y: string): void
   next(type: 'DRAW' | 'WORD', value: number | string): void {}
   validateWord(word: string) {
-    if (word === this.answer) return true
+    if (this.answer && word === this.answer) return true
     else return false
   }
   startWordPhase() {
     const m = this.getNextDrawer()
     const words = this.getThreeRandomWords()
-    // active user에게는 단어 3개를,
-    // 나머지는 그냥.
+    // active user - game status update with 3 words,
+    // 나머지 - game status update.
     SocketManager.emitEvent({
       roomId: '',
       type: S2CEventType.STATUS_UPDATED,
@@ -45,8 +49,24 @@ class Game {
         status: this.status,
       },
     })
+    this.timer = setTimeout(() => {
+      // start draw phase
+    }, Game.SELECTING_WORD_TIME)
   }
-  startDrawPhase() {}
+  startDrawPhase(word: string) {
+    if (this.status !== GAME_STATUS.SELECTING_WORD) return
+    if (this.timer) {
+      clearTimeout(this.timer)
+      this.timer = null
+    }
+    this.answer = word
+    // active user - game status update with the word
+    // 나머지 - game status update
+
+    this.timer = setTimeout(() => {
+      // start word phase
+    }, this.config.drawTime * 1000)
+  }
   getNextDrawer() {
     for (let i = 0; i < this.memberList.length; i++) {
       if (this.memberHistory.find((id) => id !== this.memberList[i].id)) {

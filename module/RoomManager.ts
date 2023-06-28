@@ -70,6 +70,13 @@ class RoomManager {
     if (!this.roomTable[id]) return null
     return this.roomTable[id].getMemberList()
   }
+  getAvailableRoom(lang: AvailableLangugae) {
+    // TODO: return available public room or create new public room
+    return this.createRoom({
+      isPrivate: false,
+      language: lang,
+    })
+  }
 }
 
 const roomManager = new RoomManager()

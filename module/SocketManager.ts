@@ -1,28 +1,6 @@
 import { Server } from 'socket.io'
 import roomManager from './RoomManager'
-
-const generateRoomId = (id: string) => {
-  return `ROOMS-${id}`
-}
-
-const getRoomId = (rooms: Set<string>) => {
-  let room = ''
-  for (let i of rooms) {
-    if (i.includes('ROOMS-')) {
-      room = i
-    }
-  }
-  return room
-}
-const getUserId = (rooms: any) => {
-  let room = ''
-  for (let i in rooms) {
-    if (!i.includes('ROOMS-')) {
-      room = i
-    }
-  }
-  return room
-}
+import { generateRoomId, getRoomId, getUserId } from '../util/room'
 
 // method (client -> server)
 // join
@@ -58,29 +36,42 @@ class SocketManagerClass {
           console.error('invalid input')
           return
         }
-        console.log('join room :', payload.roomId)
-        const r = generateRoomId(payload.roomId.toString())
-        socket.join(r)
-        roomManager.createRoom({
-          isPrivate: true,
-          language: 'ko',
+        const roomId = roomManager.joinRoom(payload.roomId, {
+          id: getUserId(socket.rooms),
+          name: payload.member.name,
+          isManager: payload.member.isManager,
         })
-        roomManager.joinRoom(payload.roomId, payload.member)
+        if (!roomId) {
+          console.log('invalid room id')
+          return
+        }
+        console.log('join room :', payload.roomId)
+        const socketRoomId = generateRoomId(payload.roomId.toString())
+        socket.join(socketRoomId)
         this.emitEvent({
-          roomId: r,
+          roomId: socketRoomId,
           type: S2CEventType.CHATTING_UPDATED,
           payload: {
             type: 'SYS',
             text: `${payload.member.name} has joined.`,
           },
         })
-      })
-      socket.on('CHAT', (payload: ChatPayload) => {
-        let room = getRoomId(socket.rooms)
-        console.log(room)
+        const room = roomManager.getRoom(roomId)
         if (!room) return
         this.emitEvent({
-          roomId: room,
+          roomId: socketRoomId,
+          type: S2CEventType.MEMBER_UPDATED,
+          payload: {
+            memberList: room.getMemberList(),
+          },
+        })
+      })
+      socket.on('CHAT', (payload: ChatPayload) => {
+        const id = getRoomId(socket.rooms)
+        console.log(id)
+        if (!id) return
+        this.emitEvent({
+          roomId: id,
           type: S2CEventType.CHATTING_UPDATED,
           payload: {
             type: 'USR',
@@ -90,7 +81,12 @@ class SocketManagerClass {
         })
         // if the word is current answer,
         // and game status will be updated.
-        //
+        const room = roomManager.getRoom(id)
+        if (!room) return
+        const check = room.checkIsAnswer(payload.text)
+        if (check) {
+          room.stepToWordPhase()
+        }
       })
       socket.on('DRAW', () => {
         //
@@ -98,14 +94,28 @@ class SocketManagerClass {
       socket.on('KICK', () => {
         //
       })
-      socket.on('SELECT_WORD', () => {
-        //
+      socket.on('SELECT_WORD', (payload: SelectWordPayload) => {
+        const id = getRoomId(socket.rooms)
+        const room = roomManager.getRoom(id)
+        if (!room) return
+        room.stepToDrawPhase(payload.word)
       })
-      socket.on('UPDATE_SETTING', () => {
+      socket.on('UPDATE_SETTING', (payload: UpdateSettingPayload) => {
         //
+        const id = getRoomId(socket.rooms)
+        const room = roomManager.getRoom(id)
+        if (!room) return
+        room.setConfig(payload.config)
+        this.emitEvent({
+          roomId: id,
+          type: S2CEventType.SETTING_UPDATED,
+          payload: { config: payload.config },
+        })
       })
-      socket.on('START', () => {
-        const id = ''
+      socket.on('START', (payload: StartPayload) => {
+        // TODO: check is valid user
+        console.log('start')
+        const id = getRoomId(socket.rooms)
         const room = roomManager.getRoom(id)
         if (!room) return
         room.start()

@@ -30,16 +30,28 @@ class Room {
   getConfig() {
     return this.config
   }
+  setConfig(config: RoomConfig) {
+    if (config.language) this.config.language = config.language
+    if (config.isPrivate !== undefined) this.config.isPrivate = config.isPrivate
+    if (config.drawTime) this.config.drawTime = config.drawTime
+    if (config.round) this.config.round = config.round
+  }
   start() {
     if (this.game) return null
-    this.game = new Game(this.memberList, this.config.language)
-    const m = this.game.getNextDrawer()
+    this.game = new Game(this.id, this.memberList, this.config.language)
+    this.game.startWordPhase()
   }
-  gotoSelectingWord() {
-    // select user
+  stepToWordPhase() {
+    if (!this.game) return null
+    this.game.startWordPhase()
   }
-  gotoDrawing() {
-    // ...
+  stepToDrawPhase(word: string) {
+    if (!this.game) return null
+    this.game.startDrawPhase(word)
+  }
+  checkIsAnswer(word: string) {
+    if (!this.game) return false
+    return this.game.validateWord(word)
   }
 }
 
@@ -49,8 +61,8 @@ class RoomManager {
     this.roomTable = {}
   }
   getRoom(id: string) {
-    if (!this.roomTable[id]) return null
-    return this.roomTable[id]
+    if (!this.roomTable[id.replace('ROOMS-', '')]) return null
+    return this.roomTable[id.replace('ROOMS-', '')]
   }
   hasRoom(id: string) {
     if (this.roomTable[id]) return true

@@ -43,6 +43,7 @@ type MemberUpdatedPayload = {
 }
 type StatusUpdatedPayload = {
   status: GameStatus
+  words?: string[]
 }
 type SettingUpdatedPayload = {
   config: Config

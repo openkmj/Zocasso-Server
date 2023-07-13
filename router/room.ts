@@ -1,11 +1,10 @@
 import { Router } from 'express'
-import { createRoom, joinRoom } from '../controller/room'
-import checkToken from '../middleware/checkToken'
+import { createRoom, getRoom, joinRoom } from '../controller/room'
 
 const room = Router()
 
-room.get('/:roomId', joinRoom)
-// room.get('/', checkToken, joinRoom)
+room.get('/:id', getRoom)
+room.post('/join', joinRoom)
 room.post('/', createRoom)
 
 export default room

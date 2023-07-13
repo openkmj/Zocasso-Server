@@ -1,7 +1,5 @@
-interface Config extends RoomConfig, GameConfig {}
-
-interface RoomConfig {
-  isPrivate: boolaen
+interface RoomConfig extends Partial<GameConfig> {
+  isPrivate: boolean
   language: AvailableLangugae
 }
 
@@ -10,12 +8,7 @@ interface GameConfig {
   round: number
 }
 
-const GAME_STATUS = {
-  PENDING: 0, // 로비 대기
-  SELECTING_WORD: 1, // 단어 선택 중
-  DRAWING: 2, // 그림 그리는 중
-}
-type GameStatus = (typeof GAME_STATUS)[keyof typeof GAME_STATUS]
+type GameStatus = 'PENDING' | 'SELECTING_WORD' | 'DRAWING'
 
 type AvailableLangugae = 'ko' | 'en'
 

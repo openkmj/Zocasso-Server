@@ -8,27 +8,27 @@ declare const enum S2CEventType {
 
 declare type S2CEvent =
   | {
-      roomId: string
+      roomId: SocketRoomId
       type: S2CEventType.CHATTING_UPDATED
       payload: ChattingUpdatedPayload
     }
   | {
-      roomId: string
+      roomId: SocketRoomId
       type: S2CEventType.MEMBER_UPDATED
       payload: MemberUpdatedPayload
     }
   | {
-      roomId: string
+      roomId: SocketRoomId
       type: S2CEventType.STATUS_UPDATED
       payload: StatusUpdatedPayload
     }
   | {
-      roomId: string
+      roomId: SocketRoomId
       type: S2CEventType.SETTING_UPDATED
       payload: SettingUpdatedPayload
     }
   | {
-      roomId: string
+      roomId: SocketRoomId
       type: S2CEventType.CANVAS_UPDATED
       payload: CanvasUpdatedPayload
     }

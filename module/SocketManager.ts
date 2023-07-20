@@ -83,10 +83,7 @@ class SocketManagerClass {
         // and game status will be updated.
         const room = roomManager.getRoom(id)
         if (!room) return
-        const check = room.checkIsAnswer(payload.text)
-        if (check) {
-          room.stepToWordPhase()
-        }
+        room.checkIsAnswer(payload.member, payload.text)
       })
       socket.on('DRAW', () => {
         //
@@ -96,13 +93,15 @@ class SocketManagerClass {
       })
       socket.on('SELECT_WORD', (payload: SelectWordPayload) => {
         const id = getRoomId(socket.rooms)
+        if (!id) return
         const room = roomManager.getRoom(id)
         if (!room) return
         room.stepToDrawPhase(payload.word)
       })
       socket.on('UPDATE_SETTING', (payload: UpdateSettingPayload) => {
-        //
+        // TODO: check is valid user
         const id = getRoomId(socket.rooms)
+        if (!id) return
         const room = roomManager.getRoom(id)
         if (!room) return
         room.setConfig(payload.config)
@@ -116,6 +115,7 @@ class SocketManagerClass {
         // TODO: check is valid user
         console.log('start')
         const id = getRoomId(socket.rooms)
+        if (!id) return
         const room = roomManager.getRoom(id)
         if (!room) return
         room.start()
@@ -127,6 +127,13 @@ class SocketManagerClass {
     console.log(`emit ${event.type} event to ${event.roomId}`)
     console.log(event.payload)
     this.io.in(event.roomId).emit(event.type, event.payload)
+  }
+  // TODO: integrate method with emitEvent
+  emitEventExcept(event: S2CEvent, except: string) {
+    if (!this.io) return
+    console.log(`emit ${event.type} event to ${event.roomId} except ${except}`)
+    console.log(event.payload)
+    this.io.in(event.roomId).except(except).emit(event.type, event.payload)
   }
 }
 

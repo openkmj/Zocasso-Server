@@ -41,22 +41,18 @@ class Room {
     this.game = new Game(this.id, this.memberList, this.config.language)
     this.game.startWordPhase()
   }
-  stepToWordPhase() {
-    if (!this.game) return null
-    this.game.startWordPhase()
-  }
   stepToDrawPhase(word: string) {
     if (!this.game) return null
     this.game.startDrawPhase(word)
   }
-  checkIsAnswer(word: string) {
-    if (!this.game) return false
-    return this.game.validateWord(word)
+  checkIsAnswer(member: Member, word: string) {
+    if (!this.game) return
+    this.game.guessWord(member, word)
   }
 }
 
 class RoomManager {
-  private roomTable: RoomTable
+  private roomTable: RoomTable // TODO: use Map
   constructor() {
     this.roomTable = {}
   }
@@ -77,10 +73,6 @@ class RoomManager {
     if (!this.roomTable[id]) return null
     this.roomTable[id].join(member)
     return this.roomTable[id].id
-  }
-  getRoomInfo(id: string) {
-    if (!this.roomTable[id]) return null
-    return this.roomTable[id].getMemberList()
   }
   getAvailableRoom(lang: AvailableLangugae) {
     // TODO: return available public room or create new public room

@@ -33,18 +33,40 @@ declare type S2CEvent =
       payload: CanvasUpdatedPayload
     }
 
-type ChattingUpdatedPayload = {
-  type: 'SYS' | 'USR'
-  member?: Member
-  text: string
-}
+type ChattingUpdatedPayload =
+  | {
+      type: 'SYS'
+      text: string
+    }
+  | {
+      type: 'USR'
+      member: Member
+      text: string
+    }
 type MemberUpdatedPayload = {
-  memberList: Member[]
+  memberList: MemberInRoom[]
 }
-type StatusUpdatedPayload = {
-  status: GameStatus
-  words?: string[]
-}
+type StatusUpdatedPayload =
+  | {
+      status: GameStatus.PENDING
+      turnResult?: {
+        answer: string
+        scoreBoard: MemberForScore[]
+      }
+    }
+  | {
+      status: GameStatus.SELECTING_WORD
+      turnResult?: {
+        answer: string
+        scoreBoard: MemberForScore[]
+      }
+      words?: string[]
+    }
+  | {
+      status: GameStatus.DRAWING
+      word?: string
+      wordLength?: number
+    }
 type SettingUpdatedPayload = {
   config: Config
 }

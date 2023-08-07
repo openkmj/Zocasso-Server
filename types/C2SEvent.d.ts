@@ -6,11 +6,12 @@ declare const enum C2SEventType {
   SELECT_WORD = 'SELECT_WORD',
   DRAW = 'DRAW',
   KICK = 'KICK',
+  SKIP = 'SKIP',
 }
 
 type JoinPayload = {
   roomId: string
-  member: Member
+  member: MemberInRoom
 }
 type ChatPayload = {
   type: 'USR'
@@ -30,3 +31,4 @@ type DrawPayload = {
 type KickPayload = {
   member: Member
 }
+type SkipPayload = {}

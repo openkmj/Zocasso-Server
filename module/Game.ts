@@ -1,7 +1,8 @@
+import logger from '../util/logger'
 import { randomPick } from '../util/random'
 import { generateRoomId } from '../util/room'
 import { getRandomWord } from '../util/word'
-import SocketManager from './SocketManager'
+import socketManager from './SocketManager'
 
 class Game {
   static SELECTING_WORD_TIME = 15 * 1000
@@ -9,25 +10,31 @@ class Game {
   private roomId: string
   private config: GameConfig
   private status: GameStatus
-  private round = 0
-  private memberList: MemberDetail[]
+  private round = 1
+  private memberList: MemberInGame[]
   private memberHistory: string[]
   private answer = ''
   private language: AvailableLangugae
   private scoreBuffer: string[]
-  activeUser: MemberDetail | null
+  activeUser: MemberInGame | null
   private timer: NodeJS.Timer | null
 
   constructor(
     id: string,
     memberList: Member[],
     language: AvailableLangugae,
-    { drawTime, round }: GameConfig = { drawTime: 80, round: 3 }
+    { drawTime, round, showWordLength, customWord }: GameConfig = {
+      drawTime: 80,
+      round: 3,
+      showWordLength: true,
+      customWord: false,
+    }
   ) {
     this.roomId = id
     this.memberList = memberList.map((i) => ({
       isManager: false,
       score: 0,
+      turnScore: 0,
       status: 'NONE',
       ...i,
     }))
@@ -36,15 +43,18 @@ class Game {
     this.config = {
       drawTime: drawTime ?? 80,
       round: round ?? 3,
+      showWordLength: showWordLength ?? true,
+      customWord: customWord ?? false,
     }
-    this.status = 'PENDING'
     this.language = language
+    this.status = GameStatus.PENDING
     this.activeUser = null
     this.timer = null
   }
-  clear() {
+  private clear() {
     this.memberHistory = []
-    this.status = 'PENDING'
+    this.scoreBuffer = []
+    this.status = GameStatus.PENDING
     this.activeUser = null
     this.memberList.forEach((m) => {
       m.score = 0
@@ -53,73 +63,119 @@ class Game {
     if (this.timer) clearTimeout(this.timer)
     this.timer = null
   }
-  validateWord(word: string) {
+  private validateWord(word: string) {
     if (this.answer && word === this.answer) return true
     else return false
   }
-  endDraw() {
+
+  private endTurn() {
     // calculate score
     this.scoreBuffer.forEach((id, idx) => {
       const member = this.memberList.find((m) => m.id === id)
       if (!member) return
+      member.turnScore = (this.memberList.length - 1 - idx) * 2
       member.score += (this.memberList.length - 1 - idx) * 2
     })
     if (!this.activeUser) return
-    if (this.scoreBuffer.length >= this.memberList.length / 2)
+    if (this.scoreBuffer.length >= this.memberList.length / 2) {
+      this.activeUser.turnScore = this.scoreBuffer.length
       this.activeUser.score += this.scoreBuffer.length
+    }
 
-    // emit score?
-    this.startWordPhase()
+    // clear
+    this.scoreBuffer = []
+    this.memberList.forEach((m) => {
+      m.status = 'NONE'
+    })
+
+    this.startWordPhase(this.memberList)
   }
   private isAllPassOrSkip() {
     return this.memberList.every((m) => m.status !== 'NONE')
   }
 
+  /**
+   * Try to guess the answer.
+   * @param m player who try to guess the answer
+   * @param word player's input
+   * @returns void
+   */
   guessWord(m: Member, word: string) {
-    if (!this.answer || word !== this.answer) return
+    logger.log(`${this.answer} / ${word}`)
+    if (!this.validateWord(word)) return
     const member = this.memberList.find((i) => i.id === m.id)
-    if (!member) return
+    if (!member || member.status !== 'NONE') return
     member.status = 'PASS'
     this.scoreBuffer.push(member.id)
-    if (this.isAllPassOrSkip()) this.endDraw()
+    if (this.isAllPassOrSkip()) this.endTurn()
   }
 
-  skip(memberId: string) {
-    const member = this.memberList.find((i) => i.id === memberId)
-    if (!member) return
+  /**
+   * Skip this turn.
+   * @param m player who want to skip this turn
+   * @returns void
+   */
+  skip(m: Member) {
+    const member = this.memberList.find((i) => i.id === m.id)
+    if (!member || member.status !== 'NONE') return
     member.status = 'SKIP'
-    if (this.isAllPassOrSkip()) this.endDraw()
+    if (this.isAllPassOrSkip()) this.endTurn()
   }
 
-  startWordPhase() {
-    if (this.status === 'SELECTING_WORD') return
-    this.status = 'SELECTING_WORD'
-    this.memberList.forEach((m) => {
-      m.status = 'NONE'
-    })
+  /**
+   * Start new game.
+   */
+  start() {
+    this.startWordPhase()
+  }
+
+  /**
+   * Select word and start new drawing.
+   * @param word selected word to draw this turn
+   */
+  selectWord(word: string) {
+    this.startDrawPhase(word)
+  }
+
+  private startWordPhase(scoreBoard?: MemberForScore[]) {
+    if (this.status === GameStatus.SELECTING_WORD) return
+    this.status = GameStatus.SELECTING_WORD
+
     this.activeUser = this.getNextDrawer()
     if (!this.activeUser) {
-      this.endGame()
+      this.endGame(scoreBoard ?? this.memberList)
       return
     }
     this.activeUser.status = 'DRAW'
     const words = this.getThreeRandomWords()
     // active user - game status update with 3 words,
-    SocketManager.emitEvent({
+    socketManager.emitEvent({
       roomId: this.activeUser.id,
       type: S2CEventType.STATUS_UPDATED,
       payload: {
-        status: 'SELECTING_WORD',
+        status: GameStatus.SELECTING_WORD,
         words: words,
+        turnResult: scoreBoard
+          ? {
+              answer: this.answer,
+              scoreBoard,
+            }
+          : undefined,
       },
     })
     // 나머지 - game status update.
-    SocketManager.emitEventExcept(
+    socketManager.emitEvent(
       {
         roomId: generateRoomId(this.roomId),
         type: S2CEventType.STATUS_UPDATED,
         payload: {
-          status: 'SELECTING_WORD',
+          status: GameStatus.SELECTING_WORD,
+          turnResult: scoreBoard
+            ? {
+                answer: this.answer,
+                scoreBoard,
+              }
+            : undefined,
         },
       },
       this.activeUser.id
@@ -131,42 +187,44 @@ class Game {
       this.startDrawPhase(word)
     }, Game.SELECTING_WORD_TIME)
   }
-  startDrawPhase(word: string) {
-    if (this.status !== 'SELECTING_WORD') return
+
+  private startDrawPhase(word: string) {
+    if (this.status !== GameStatus.SELECTING_WORD) return
     if (!this.activeUser) return
-    this.status = 'DRAWING'
+    this.status = GameStatus.DRAWING
     if (this.timer) {
       clearTimeout(this.timer)
       this.timer = null
     }
     this.answer = word
     // active user - game status update with the word
-    SocketManager.emitEvent({
+    socketManager.emitEvent({
       roomId: this.activeUser.id,
       type: S2CEventType.STATUS_UPDATED,
       payload: {
-        status: 'DRAWING',
-        words: [word],
+        status: GameStatus.DRAWING,
+        word: word,
       },
     })
     // 나머지 - game status update
-    SocketManager.emitEventExcept(
+    socketManager.emitEvent(
       {
         roomId: generateRoomId(this.roomId),
         type: S2CEventType.STATUS_UPDATED,
         payload: {
-          status: 'DRAWING',
+          status: GameStatus.DRAWING,
         },
       },
       this.activeUser.id
     )
     this.timer = setTimeout(() => {
+      this.endTurn()
       // start word phase
     }, this.config.drawTime * 1000)
   }
   private getNextDrawer() {
     for (let i = 0; i < this.memberList.length; i++) {
-      if (this.memberHistory.find((id) => id !== this.memberList[i].id)) {
+      if (!this.memberHistory.includes(this.memberList[i].id)) {
         this.memberHistory.push(this.memberList[i].id)
         return this.memberList[i]
       }
@@ -183,9 +241,18 @@ class Game {
       getRandomWord(this.language),
     ]
   }
-  private endGame() {
-    const ranking = [...this.memberList].sort((a, b) => a.score - b.score)
-    // emit event
+  private endGame(scoreBoard: MemberForScore[]) {
+    socketManager.emitEvent({
+      roomId: generateRoomId(this.roomId),
+      type: S2CEventType.STATUS_UPDATED,
+      payload: {
+        status: GameStatus.PENDING,
+        turnResult: {
+          answer: this.answer,
+          scoreBoard,
+        }, // need filter?
+      },
+    })
     this.clear()
   }
 }

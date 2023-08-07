@@ -2,7 +2,6 @@ import { Request, Response } from 'express'
 import roomManager from '../module/RoomManager'
 
 const getRoom = async (req: Request, res: Response) => {
-  console.log(req.params)
   if (!req.params.id) return res.status(404).json()
   const room = roomManager.getRoom(req.params.id)
   if (!room) return res.status(404).json()

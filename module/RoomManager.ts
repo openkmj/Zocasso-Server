@@ -9,7 +9,7 @@ interface RoomTable {
 
 class Room {
   id: string
-  private memberList: Member[]
+  private memberList: MemberInRoom[]
   private config: RoomConfig
   private game: Game | null
   constructor(id: string, config: RoomConfig) {
@@ -18,7 +18,7 @@ class Room {
     this.config = config
     this.game = null
   }
-  join(member: Member) {
+  join(member: MemberInRoom) {
     this.memberList.push(member)
   }
   leave(member: Member) {
@@ -26,6 +26,9 @@ class Room {
   }
   getMemberList() {
     return this.memberList
+  }
+  getMemberById(id: string) {
+    return this.memberList.find((i) => i.id === id)
   }
   getConfig() {
     return this.config
@@ -35,19 +38,27 @@ class Room {
     if (config.isPrivate !== undefined) this.config.isPrivate = config.isPrivate
     if (config.drawTime) this.config.drawTime = config.drawTime
     if (config.round) this.config.round = config.round
+    if (config.showWordLength !== undefined)
+      this.config.showWordLength = config.showWordLength
+    if (config.customWord !== undefined)
+      this.config.customWord = config.customWord
   }
   start() {
     if (this.game) return null
     this.game = new Game(this.id, this.memberList, this.config.language)
-    this.game.startWordPhase()
+    this.game.start()
   }
-  stepToDrawPhase(word: string) {
+  selectWord(word: string) {
     if (!this.game) return null
-    this.game.startDrawPhase(word)
+    this.game.selectWord(word)
   }
-  checkIsAnswer(member: Member, word: string) {
+  guess(member: Member, word: string) {
     if (!this.game) return
     this.game.guessWord(member, word)
+  }
+  skip(member: Member) {
+    if (!this.game) return
+    this.game.skip(member)
   }
 }
 
@@ -69,7 +80,7 @@ class RoomManager {
     this.roomTable[id] = new Room(id, config)
     return id
   }
-  joinRoom(id: string, member: Member) {
+  joinRoom(id: string, member: MemberInRoom) {
     if (!this.roomTable[id]) return null
     this.roomTable[id].join(member)
     return this.roomTable[id].id

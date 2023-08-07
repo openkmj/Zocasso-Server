@@ -8,22 +8,31 @@ interface RoomConfig extends Partial<GameConfig> {
 interface GameConfig {
   drawTime: number
   round: number
+  showWordLength: boolean
+  customWord: boolean
 }
 
-type GameStatus = 'PENDING' | 'SELECTING_WORD' | 'DRAWING'
+declare const enum GameStatus {
+  PENDING = 'PENDING',
+  SELECTING_WORD = 'SELECTING_WORD',
+  DRAWING = 'DRAWING',
+}
 
 type AvailableLangugae = 'ko' | 'en'
 
 interface Member {
   id: string
   name: string
-  isManager?: boolean
-  score?: number
 }
-interface MemberDetail extends Member {
+interface MemberInRoom extends Member {
   isManager: boolean
-  score: number
+}
+interface MemberInGame extends MemberInRoom, MemberForScore {
   status: 'DRAW' | 'SKIP' | 'PASS' | 'NONE'
+}
+interface MemberForScore extends Member {
+  score: number
+  turnScore: number
 }
 
 type BrushActionType = {

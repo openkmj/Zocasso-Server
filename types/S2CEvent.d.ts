@@ -71,5 +71,6 @@ type SettingUpdatedPayload = {
   config: Config
 }
 type CanvasUpdatedPayload = {
-  actions: (BrushActionType | FillActionType)[]
+  data: any
+  // actions: (BrushActionType | FillActionType)[]
 }

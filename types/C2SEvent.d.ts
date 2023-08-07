@@ -26,7 +26,8 @@ type SelectWordPayload = {
   word: string
 }
 type DrawPayload = {
-  actions: (BrushActionType | FillActionType)[]
+  data: any
+  // actions: (BrushActionType | FillActionType)[]
 }
 type KickPayload = {
   member: Member

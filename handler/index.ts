@@ -1,7 +1,7 @@
 import { Socket } from 'socket.io'
-import { generateRoomId, getRoomId, getUserId } from '../util/room'
-import socketManager from '../module/SocketManager'
 import roomManager from '../module/RoomManager'
+import socketManager from '../module/SocketManager'
+import { generateRoomId, getRoomId, getUserId } from '../util/room'
 
 const getJoinHandler = (socket: Socket) => (payload: JoinPayload) => {
   if (!payload.roomId || !payload?.member?.name) {
@@ -58,7 +58,17 @@ const getChatHandler = (socket: Socket) => (payload: ChatPayload) => {
   room.guess(payload.member, payload.text)
 }
 
-const getDrawHandler = (socket: Socket) => () => {}
+const getDrawHandler = (socket: Socket) => (payload: DrawPayload) => {
+  const id = getRoomId(socket.rooms)
+  if (!id) return
+  socketManager.emitEvent({
+    roomId: id,
+    type: S2CEventType.CANVAS_UPDATED,
+    payload: {
+      data: payload.data,
+    },
+  })
+}
 
 const getKickHandler = (socket: Socket) => () => {}
 

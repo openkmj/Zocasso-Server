@@ -12,13 +12,14 @@ const getRoomId = (rooms: Set<string>): SocketRoomId | null => {
   if (!room) return null
   return room
 }
-const getUserId = (rooms: Set<string>): string => {
+const getUserId = (rooms: Set<string>): string | null => {
   let room = ''
   for (let i of rooms) {
     if (!i.includes('ROOMS-')) {
       room = i
     }
   }
+  if (!room) return null
   return room
 }
 

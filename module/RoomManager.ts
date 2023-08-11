@@ -21,8 +21,8 @@ class Room {
   join(member: MemberInRoom) {
     this.memberList.push(member)
   }
-  leave(member: Member) {
-    this.memberList = this.memberList.filter((m) => m.id !== member.id)
+  leave(id: string) {
+    this.memberList = this.memberList.filter((m) => m.id !== id)
   }
   getMemberList() {
     return this.memberList

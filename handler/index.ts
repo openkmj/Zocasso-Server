@@ -8,8 +8,11 @@ const getJoinHandler = (socket: Socket) => (payload: JoinPayload) => {
     console.error('invalid input')
     return
   }
+  const uid = getUserId(socket.rooms)
+  if (!uid) return
+
   const roomId = roomManager.joinRoom(payload.roomId, {
-    id: getUserId(socket.rooms),
+    id: uid,
     name: payload.member.name,
     isManager: payload.member.isManager,
   })
@@ -80,6 +83,7 @@ const getSkipHandler = (socket: Socket) => (payload: SkipPayload) => {
   const room = roomManager.getRoom(id)
   if (!room) return
   const uid = getUserId(socket.rooms)
+  if (!uid) return
   const m = room.getMemberById(uid)
   if (!m) return
   room.skip(m)
@@ -118,6 +122,24 @@ const getUpdateSettingHandler =
     })
   }
 
+const getDisconnectHandler = (socket: Socket) => () => {
+  const id = getRoomId(socket.rooms)
+  if (!id) return
+  const room = roomManager.getRoom(id)
+  if (!room) return
+  const uid = getUserId(socket.rooms)
+  if (!uid) return
+  room.leave(uid)
+
+  socketManager.emitEvent({
+    roomId: id,
+    type: S2CEventType.MEMBER_UPDATED,
+    payload: {
+      memberList: room.getMemberList(),
+    },
+  })
+}
+
 export {
   getJoinHandler,
   getChatHandler,
@@ -127,4 +149,5 @@ export {
   getSelectWordHandler,
   getStartHandler,
   getUpdateSettingHandler,
+  getDisconnectHandler,
 }

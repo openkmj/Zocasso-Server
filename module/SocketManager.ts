@@ -1,6 +1,7 @@
 import { Server } from 'socket.io'
 import {
   getChatHandler,
+  getDisconnectHandler,
   getDrawHandler,
   getJoinHandler,
   getKickHandler,
@@ -27,6 +28,7 @@ class SocketManager {
       socket.on(C2SEventType.SELECT_WORD, getSelectWordHandler(socket))
       socket.on(C2SEventType.START, getStartHandler(socket))
       socket.on(C2SEventType.UPDATE_SETTING, getUpdateSettingHandler(socket))
+      socket.on('disconnect', getDisconnectHandler(socket))
     })
   }
   emitEvent(event: S2CEvent, except?: string) {

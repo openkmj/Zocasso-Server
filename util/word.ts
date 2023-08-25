@@ -1,6 +1,9 @@
+import en from './words/en'
+import ko from './words/ko'
+
 const WORDS = {
-  ko: ['사과', '바나나', '호랑이', '강아지', '태양'],
-  en: ['tiger', 'rabbit', 'robot', 'cow', 'dog', 'cat', 'cup', 'phone', 'cry'],
+  en,
+  ko,
 }
 
 const getRandomWord = (lang: 'ko' | 'en') => {

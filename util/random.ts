@@ -1,5 +1,5 @@
 const getRandomString = () => {
-  return Math.random().toString(36).substring(2, 12)
+  return Math.random().toString(36).substring(2, 6)
 }
 
 const randomPick = <T>(array: T[]) => {

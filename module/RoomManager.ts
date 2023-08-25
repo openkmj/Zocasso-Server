@@ -36,6 +36,7 @@ class Room {
   setConfig(config: RoomConfig) {
     if (config.language) this.config.language = config.language
     if (config.isPrivate !== undefined) this.config.isPrivate = config.isPrivate
+    if (config.maxPlayer) this.config.maxPlayer = config.maxPlayer
     if (config.drawTime) this.config.drawTime = config.drawTime
     if (config.round) this.config.round = config.round
     if (config.showWordLength !== undefined)

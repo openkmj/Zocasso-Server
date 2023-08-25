@@ -6,6 +6,7 @@ interface RoomConfig extends Partial<GameConfig> {
 }
 
 interface GameConfig {
+  maxPlayer: number
   drawTime: number
   round: number
   showWordLength: boolean

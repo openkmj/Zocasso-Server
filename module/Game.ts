@@ -23,7 +23,8 @@ class Game {
     id: string,
     memberList: Member[],
     language: AvailableLangugae,
-    { drawTime, round, showWordLength, customWord }: GameConfig = {
+    { maxPlayer, drawTime, round, showWordLength, customWord }: GameConfig = {
+      maxPlayer: 6,
       drawTime: 80,
       round: 3,
       showWordLength: true,
@@ -41,6 +42,7 @@ class Game {
     this.memberHistory = []
     this.scoreBuffer = []
     this.config = {
+      maxPlayer: maxPlayer ?? 6,
       drawTime: drawTime ?? 80,
       round: round ?? 3,
       showWordLength: showWordLength ?? true,

@@ -14,6 +14,7 @@ const getJoinHandler = (socket: Socket) => (payload: JoinPayload) => {
   const roomId = roomManager.joinRoom(payload.roomId, {
     id: uid,
     name: payload.member.name,
+    character: payload.member.character,
     isManager: payload.member.isManager,
   })
   if (!roomId) {
@@ -91,6 +92,7 @@ const getSkipHandler = (socket: Socket) => (payload: SkipPayload) => {
 
 const getSelectWordHandler =
   (socket: Socket) => (payload: SelectWordPayload) => {
+    // TODO: check is valid user (only drawer of this turn)
     const id = getRoomId(socket.rooms)
     if (!id) return
     const room = roomManager.getRoom(id)
@@ -99,7 +101,7 @@ const getSelectWordHandler =
   }
 
 const getStartHandler = (socket: Socket) => (payload: StartPayload) => {
-  // TODO: check is valid user
+  // TODO: check is valid user (only room manager)
   const id = getRoomId(socket.rooms)
   if (!id) return
   const room = roomManager.getRoom(id)
@@ -109,7 +111,7 @@ const getStartHandler = (socket: Socket) => (payload: StartPayload) => {
 
 const getUpdateSettingHandler =
   (socket: Socket) => (payload: UpdateSettingPayload) => {
-    // TODO: check is valid user
+    // TODO: check is valid user (only room manager)
     const id = getRoomId(socket.rooms)
     if (!id) return
     const room = roomManager.getRoom(id)
@@ -141,13 +143,13 @@ const getDisconnectHandler = (socket: Socket) => () => {
 }
 
 export {
-  getJoinHandler,
   getChatHandler,
+  getDisconnectHandler,
   getDrawHandler,
+  getJoinHandler,
   getKickHandler,
-  getSkipHandler,
   getSelectWordHandler,
+  getSkipHandler,
   getStartHandler,
   getUpdateSettingHandler,
-  getDisconnectHandler,
 }

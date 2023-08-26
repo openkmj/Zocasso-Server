@@ -24,6 +24,7 @@ type AvailableLangugae = 'ko' | 'en'
 interface Member {
   id: string
   name: string
+  character: number
 }
 interface MemberInRoom extends Member {
   isManager: boolean

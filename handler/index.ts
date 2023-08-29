@@ -74,7 +74,14 @@ const getDrawHandler = (socket: Socket) => (payload: DrawPayload) => {
   })
 }
 
-const getKickHandler = (socket: Socket) => () => {}
+const getKickHandler = (socket: Socket) => (payload: KickPayload) => {
+  // TODO: check is valid user (only room manager)
+  const id = getRoomId(socket.rooms)
+  if (!id) return
+  const room = roomManager.getRoom(id)
+  if (!room) return
+  room.leave(payload.member.id)
+}
 
 const getSkipHandler = (socket: Socket) => (payload: SkipPayload) => {
   const id = getRoomId(socket.rooms)

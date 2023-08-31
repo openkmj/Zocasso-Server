@@ -10,6 +10,7 @@ class Game {
   private roomId: string
   private config: GameConfig
   private status: GameStatus
+  private canvasFrame: any // TODO: canvas frame type?
   private round = 1
   private memberList: MemberInGame[]
   private memberHistory: string[]
@@ -137,6 +138,30 @@ class Game {
    */
   selectWord(word: string) {
     this.startDrawPhase(word)
+  }
+
+  /**
+   * Get current game status
+   * @returns Game Status
+   */
+  getStatus() {
+    return this.status
+  }
+
+  /**
+   * Get current canvas frame
+   * @returns Canvas Frame
+   */
+  getCanvasFrame() {
+    return this.canvasFrame
+  }
+
+  /**
+   * Update canvas frame
+   * @param frame canvas frame
+   */
+  setCanvasFrame(frame: any) {
+    this.canvasFrame = frame
   }
 
   private startWordPhase(scoreBoard?: MemberForScore[]) {

@@ -61,6 +61,21 @@ class Room {
     if (!this.game) return
     this.game.skip(member)
   }
+  getInitialInfo(): RoomInfo {
+    if (this.game) {
+      return {
+        config: this.getConfig(),
+        member: this.getMemberList(),
+        status: this.game.getStatus(),
+        drawStatus: this.game.getCanvasFrame(),
+      } as RoomInfo
+    } else {
+      return {
+        config: this.getConfig(),
+        member: this.getMemberList(),
+      } as RoomInfo
+    }
+  }
 }
 
 class RoomManager {

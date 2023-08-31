@@ -65,6 +65,7 @@ const getChatHandler = (socket: Socket) => (payload: ChatPayload) => {
 const getDrawHandler = (socket: Socket) => (payload: DrawPayload) => {
   const id = getRoomId(socket.rooms)
   if (!id) return
+  // update canvas frame
   socketManager.emitEvent({
     roomId: id,
     type: S2CEventType.CANVAS_UPDATED,

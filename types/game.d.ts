@@ -1,5 +1,16 @@
 type SocketRoomId = `ROOMS-${string}` | string
 
+interface RoomInfo {
+  // Setting
+  config: RoomConfig
+  // Member
+  member: MemberInGame[]
+  // Status
+  status?: GameStatus
+  // Canvas Info
+  drawStatus?: string
+}
+
 interface RoomConfig extends Partial<GameConfig> {
   isPrivate: boolean
   language: AvailableLangugae

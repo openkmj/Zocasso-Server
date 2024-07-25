@@ -140,6 +140,8 @@ const getDisconnectHandler = (socket: Socket) => () => {
   if (!room) return
   const uid = getUserId(socket.rooms)
   if (!uid) return
+
+  logger.log('leave room :', uid, id)
   room.leave(uid)
 
   socketManager.emitEvent({
@@ -149,6 +151,9 @@ const getDisconnectHandler = (socket: Socket) => () => {
       memberList: room.getMemberList(),
     },
   })
+  if (room.isEmpty()) {
+    roomManager.deleteRoom(id)
+  }
 }
 
 export {

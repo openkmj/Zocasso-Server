@@ -27,6 +27,9 @@ class Room {
   getMemberList() {
     return this.memberList
   }
+  isEmpty() {
+    return this.memberList.length === 0
+  }
   getMemberById(id: string) {
     return this.memberList.find((i) => i.id === id)
   }
@@ -100,6 +103,10 @@ class RoomManager {
     if (!this.roomTable[id]) return null
     this.roomTable[id].join(member)
     return this.roomTable[id].id
+  }
+  deleteRoom(id: string) {
+    if (!this.roomTable[id]) return
+    delete this.roomTable[id]
   }
   getAvailableRoom(lang: AvailableLangugae) {
     // TODO: return available public room or create new public room

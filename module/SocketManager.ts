@@ -18,7 +18,9 @@ class SocketManager {
     this.io = null
   }
   init(server: any) {
-    this.io = new Server(server, { cors: { origin: '*' } })
+    this.io = new Server(server, {
+      cors: { origin: '*' },
+    })
     this.io.on('connection', (socket) => {
       socket.on(C2SEventType.JOIN, getJoinHandler(socket))
       socket.on(C2SEventType.CHAT, getChatHandler(socket))
@@ -28,7 +30,7 @@ class SocketManager {
       socket.on(C2SEventType.SELECT_WORD, getSelectWordHandler(socket))
       socket.on(C2SEventType.START, getStartHandler(socket))
       socket.on(C2SEventType.UPDATE_SETTING, getUpdateSettingHandler(socket))
-      socket.on('disconnect', getDisconnectHandler(socket))
+      socket.on('disconnecting', getDisconnectHandler(socket))
     })
   }
   emitEvent(event: S2CEvent, except?: string) {

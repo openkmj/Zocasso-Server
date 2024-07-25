@@ -2,10 +2,11 @@ import { Socket } from 'socket.io'
 import roomManager from '../module/RoomManager'
 import socketManager from '../module/SocketManager'
 import { generateRoomId, getRoomId, getUserId } from '../util/room'
+import logger from '../util/logger'
 
 const getJoinHandler = (socket: Socket) => (payload: JoinPayload) => {
   if (!payload.roomId || !payload?.member?.name) {
-    console.error('invalid input')
+    logger.error('invalid input')
     return
   }
   const uid = getUserId(socket.rooms)
@@ -18,10 +19,10 @@ const getJoinHandler = (socket: Socket) => (payload: JoinPayload) => {
     isManager: payload.member.isManager,
   })
   if (!roomId) {
-    console.error('invalid room id')
+    logger.error('invalid room id', payload.roomId)
     return
   }
-  console.log('join room :', payload.roomId)
+  logger.log('join room :', roomId)
   const socketRoomId = generateRoomId(payload.roomId.toString())
   socket.join(socketRoomId)
   socketManager.emitEvent({
